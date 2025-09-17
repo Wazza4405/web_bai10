@@ -7,7 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+@WebServlet("/cart")
 public class CartServlet extends HttpServlet {
 
     @Override
@@ -27,16 +30,45 @@ public class CartServlet extends HttpServlet {
         String priceStr = request.getParameter("price");
         String quantityStr = request.getParameter("quantity");
 
-        if ("add".equals(action) && desc != null && priceStr != null) {
+        if ("add".equalsIgnoreCase(action) && desc != null && priceStr != null) {
             double price = Double.parseDouble(priceStr);
-            cart.addItem(new Item(desc, price, 1));
+            int quantity = 1;
+            if (quantityStr != null) {
+                try {
+                    quantity = Integer.parseInt(quantityStr);
+                } catch (NumberFormatException e) {
+                    quantity = 1;
+                }
+            }
+            cart.addItem(new Item(desc, price, quantity));
         }
-        else if ("update".equals(action) && desc != null && quantityStr != null) {
+        else if ("update".equalsIgnoreCase(action) && desc != null && quantityStr != null) {
             int quantity = Integer.parseInt(quantityStr);
             cart.updateItem(desc, quantity);
         }
-        else if ("remove".equals(action) && desc != null) {
+        else if ("remove".equalsIgnoreCase(action) && desc != null) {
             cart.removeItem(desc);
+        }
+        else if ("checkout".equalsIgnoreCase(action)) {
+            // sang trang checkout.jsp
+            request.getRequestDispatcher("/checkout.jsp").forward(request, response);
+            return;
+        }
+        else if ("confirm".equalsIgnoreCase(action)) {
+            // lưu cart vào PaidOrders rồi reset giỏ
+            List<Cart> paidOrders = (List<Cart>) session.getAttribute("paidOrders");
+            if (paidOrders == null) {
+                paidOrders = new ArrayList<>();
+            }
+            paidOrders.add(cart);
+            session.setAttribute("paidOrders", paidOrders);
+
+            // reset cart
+            session.setAttribute("cart", new Cart());
+
+            // sang trang confirm.jsp
+            request.getRequestDispatcher("/confirm.jsp").forward(request, response);
+            return;
         }
 
         request.getRequestDispatcher("/cart.jsp").forward(request, response);

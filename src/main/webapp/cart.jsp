@@ -1,78 +1,95 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
-<%@ page import="murach.cart.Item" %>
 <%@ page import="murach.cart.Cart" %>
+<%@ page import="murach.cart.Item" %>
 <%@ page import="java.util.*" %>
+
 <html>
 <head>
     <title>Your Cart</title>
     <style>
-        h2 { color: green; }
-        table { border-collapse: collapse; width: 80%; }
-        th, td { border: 1px solid black; padding: 6px; }
-        th { background: #f0f0f0; }
-        td.desc { width: 350px; }
-        td.price, td.amount { width: 100px; text-align: center; }  /* căn giữa Price + Amount */
-        input[type=text] { width: 30px; }
-        .btn {
-            padding: 4px 10px;
-            border: 1px solid black;
-            background: #f9f9f9;
-            text-decoration: none;
-            color: black;
-            cursor: pointer;
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+        h2 { color: #2d572c; }
+        table { width: 80%; margin-bottom: 30px; border-collapse: collapse; background: #fff; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #2d572c; color: #fff; }
+        input[type="submit"], .btn {
+            background-color: #28a745; color: white; border: none;
+            padding: 6px 12px; cursor: pointer; border-radius: 4px;
         }
-        .btn:hover { background: #e0e0e0; }
+        input[type="submit"]:hover, .btn:hover { background-color: #218838; }
     </style>
 </head>
 <body>
-<h2>Your cart</h2>
 
+<h2>Your Cart (Unpaid Orders)</h2>
 <%
     Cart cart = (Cart) session.getAttribute("cart");
     if (cart == null || cart.getItems().isEmpty()) {
 %>
 <p>Your cart is empty.</p>
-<%
-} else {
-%>
+<%  } else { %>
 <table>
-    <tr>
-        <th>Quantity</th>
-        <th>Description</th>
-        <th>Price</th>
-        <th>Amount</th>
-        <th></th>
-    </tr>
+    <tr><th>Quantity</th><th>Description</th><th>Price</th><th>Amount</th><th></th></tr>
     <%
         for (Item item : cart.getItems()) {
     %>
     <tr>
         <td>
-            <form action="cart" method="post" style="display:inline;">
-                <input type="hidden" name="desc" value="<%=item.getDescription()%>"/>
-                <input type="text" name="quantity" value="<%=item.getQuantity()%>" size="2"/>
-                <input class="btn" type="submit" name="action" value="Update"/>
+            <form action="cart" method="post">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="desc" value="<%= item.getDescription() %>">
+                <input type="text" name="quantity" value="<%= item.getQuantity() %>" size="2">
+                <input type="submit" value="Update">
             </form>
         </td>
-        <td class="desc"><%=item.getDescription()%></td>
-        <td class="price">$<%=item.getPrice()%></td>
-        <td class="amount">$<%=item.getTotal()%></td>
-        <td><a class="btn" href="cart?action=remove&desc=<%=item.getDescription()%>">Remove Item</a></td>
+        <td><%= item.getDescription() %></td>
+        <td>$<%= item.getPrice() %></td>
+        <td>$<%= item.getTotal() %></td>
+        <td>
+            <form action="cart" method="post">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="desc" value="<%= item.getDescription() %>">
+                <input type="submit" value="Remove Item">
+            </form>
+        </td>
     </tr>
-    <%
-        }
-    %>
+    <% } %>
 </table>
-<p><strong>Total: $<%=cart.getTotalAmount()%></strong></p>
-<p><b>To change the quantity,</b> enter the new quantity and click on the Update button.</p>
+<p><b>Total:</b> $<%= cart.getTotalAmount() %></p>
+<form action="index.jsp" method="post"><input type="submit" value="Continue Shopping"></form>
+<form action="cart" method="post">
+    <input type="hidden" name="action" value="checkout">
+    <input type="submit" value="Checkout">
+</form>
+<% } %>
+
+<hr>
+
+<h2>Paid Orders</h2>
 <%
+    List<Cart> paidOrders = (List<Cart>) session.getAttribute("paidOrders");
+    if (paidOrders == null || paidOrders.isEmpty()) {
+%>
+<p>No paid orders yet.</p>
+<%
+} else {
+    for (Cart paid : paidOrders) {
+%>
+<table>
+    <tr><th>Quantity</th><th>Description</th><th>Price</th><th>Amount</th></tr>
+    <% for (Item item : paid.getItems()) { %>
+    <tr>
+        <td><%= item.getQuantity() %></td>
+        <td><%= item.getDescription() %></td>
+        <td>$<%= item.getPrice() %></td>
+        <td>$<%= item.getTotal() %></td>
+    </tr>
+    <% } %>
+</table>
+<%
+        }
     }
 %>
 
-<p>
-    <a class="btn" href="index.jsp">Continue Shopping</a>
-    &nbsp;
-    <a class="btn" href="#">Checkout</a>
-</p>
 </body>
 </html>
